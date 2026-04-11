@@ -34,4 +34,3 @@
 #define arrfree(array) { free((array).items); (array).len = 0; (array).size = 0; }
 
 #endif
-r

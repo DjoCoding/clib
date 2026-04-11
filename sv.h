@@ -12,6 +12,8 @@ typedef struct {
 #define SV_ARG(s)       (int)s.len, s.data
 #define SV_FMT          ".*s"
 
+#define SV(d, l)        ((StringView) { .data = d, .len = l })
+#define SV_NULL         (SV(NULL, 0))
 
 // Constructors
 StringView sv_init(char *data, size_t len);
