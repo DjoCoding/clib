@@ -82,6 +82,12 @@ StringView sv_split(StringView *sv, char c) {
         sv->data += 1;
         result.len += 1;
     }
+
+    if(sv->len != 0) {
+        sv->data += 1;
+        sv->len  -= 1;
+    }
+
     return result;
 }
 
