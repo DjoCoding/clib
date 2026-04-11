@@ -59,7 +59,7 @@ void *__int_malloc(size_t size) {
     void *ptr = malloc(size);
     if(ptr == NULL) {
         perror("malloc failed");
-        assert(false && "UNREACHABLE");
+        abort();
     }
     return ptr;
 }
@@ -108,7 +108,7 @@ struct Block *__int_block_new(size_t capacity) {
 }
 
 
-#define ALLOCATOR_DEFAULT_BLOCK_CAPACITY (2 * (ALLOCATION_SIZE(24)) - ALLOCATION_SIZE(0))
+#define ALLOCATOR_DEFAULT_BLOCK_CAPACITY 1024
 
 struct Block *__int_block_default_new() {
     return __int_block_new(ALLOCATION_SIZE(ALLOCATOR_DEFAULT_BLOCK_CAPACITY));
@@ -130,6 +130,8 @@ Allocator *allocator_new() {
 }
 
 void *__int_allocator_push_block(Allocator *this, size_t size) {
+    assert(size != 0);
+
     struct Block *block = __int_block_new(ALLOCATION_SIZE(max(ALLOCATOR_DEFAULT_BLOCK_CAPACITY, size)));
     arrappend(this->blocks, block);
 
@@ -145,6 +147,8 @@ void *__int_allocator_push_block(Allocator *this, size_t size) {
 }
 
 void *allocator_alloc(Allocator *this, size_t size) {
+    if(size == 0) return NULL;
+
     if(this->user_allocated_size + ALLOCATION_SIZE(size) > this->capacity) {
         return __int_allocator_push_block(this, size);
     }
@@ -209,6 +213,8 @@ void        __int_allocator_reduce_freelist(Allocator *this);
 
 
 void allocator_free(Allocator *this, void *base) {
+    if(base == NULL) return;
+
     struct AllocationHeader *header = ((struct AllocationHeader *)base - 1);
     if(header->is_free) {
         fprintf(stderr, "failed to free, double free calls\n");

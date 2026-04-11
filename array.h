@@ -26,7 +26,7 @@
             (array).size = new_size; \
         } \
         \
-        (array).items[(array).len - 1] = item; \
+        (array).items[(array).len] = item; \
         (array).len += 1; \
     } while(0)
 
