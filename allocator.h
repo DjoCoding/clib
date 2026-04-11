@@ -1,6 +1,10 @@
 #ifndef ALLOCATOR_H_
 #define ALLOCATOR_H_
 
+#ifdef ALLOCATOR_IMPLEMENTATION
+#   define ALLOCATOR_IMPLEMENTATION__
+#endif // ALLOCATOR_IMPLEMENTATION
+
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -12,17 +16,12 @@ void       *allocator_realloc(Allocator *a, void *base, size_t size);
 void        allocator_free(Allocator *a, void *base);
 void        allocator_kill(Allocator *a);
 
-#ifdef ALLOCATOR_IMPLEMENTATION
+#ifdef ALLOCATOR_IMPLEMENTATION__
 
 #include <assert.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-
-#ifndef ARRAY_INITIAL_SIZE
-#define ARRAY_INITIAL_SIZE 100
-#endif
-
 
 struct FreeNode {
     void    *base;
