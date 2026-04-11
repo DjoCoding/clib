@@ -40,16 +40,16 @@ struct Block {
 
 typedef struct {
     struct Block   **items;
-    size_t          count;
+    size_t          len;
     size_t          size;
 } BlockList;
 
-typedef struct {
+struct Allocator {
     FreeList    fl;
     BlockList   blocks;
     size_t      user_allocated_size;
     size_t      capacity;
-} Allocator;
+};
 
 #include "array.h"
 
@@ -149,7 +149,7 @@ void *allocator_alloc(Allocator *this, size_t size) {
         return __int_allocator_push_block(this, size);
     }
 
-    for(size_t i = 0; i < this->blocks.count; ++i) {
+    for(size_t i = 0; i < this->blocks.len; ++i) {
         struct Block *block = this->blocks.items[i];
         if(block->offset + ALLOCATION_SIZE(size) > block->capacity) continue;
 
@@ -257,7 +257,7 @@ void allocator_kill(Allocator *this) {
         current = next;
     }
     
-    for(size_t i = 0; i < this->blocks.count; ++i) {
+    for(size_t i = 0; i < this->blocks.len; ++i) {
         free(this->blocks.items[i]->base);
         free(this->blocks.items[i]);
     }

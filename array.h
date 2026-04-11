@@ -22,7 +22,7 @@
             if(new_size == 0) new_size = ARRAY_INITIAL_SIZE; \
             \
             (array).items = realloc((array).items, sizeof(*(array).items) * new_size); \
-            if((array).itesm == NULL) perror("malloc error"); \
+            if((array).items == NULL) perror("malloc error"); \
             (array).size = new_size; \
         } \
         \
