@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #ifndef ARRAY_INITIAL_SIZE
-#error  "Make sure to define ARRAY_INITIAL_SIZE"
+#   define ARRAY_INITIAL_SIZE 100
 #endif // ARRAY_INITIAL_SIZE
 
 /**
