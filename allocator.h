@@ -8,6 +8,7 @@ typedef struct Allocator Allocator;
 
 Allocator  *allocator_new();
 void       *allocator_alloc(Allocator *a, size_t size);
+void       *allocator_realloc(Allocator *a, void *base, size_t size);
 void        allocator_free(Allocator *a, void *base);
 void        allocator_kill(Allocator *a);
 
@@ -17,6 +18,10 @@ void        allocator_kill(Allocator *a);
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+
+#ifndef ARRAY_INITIAL_SIZE
+#define ARRAY_INITIAL_SIZE 100
+#endif
 
 
 struct FreeNode {
@@ -77,6 +82,12 @@ struct AllocationHeader {
     bool            is_free;
     bool            is_allocated;
 };
+
+
+FreeList    __int_freelist_sort(FreeList fl);
+void        __int_freelist_split(FreeList fl, FreeList *left, FreeList *right);
+FreeList    __int_freelist_merge(FreeList left, FreeList right);
+void        __int_allocator_reduce_freelist(Allocator *this);
 
 void __int_init_header(struct AllocationHeader *header, void *base, size_t size, struct Block *block) {
     header->size = size;
@@ -206,11 +217,64 @@ void *allocator_alloc(Allocator *this, size_t size) {
     return base;
 }
 
-FreeList    __int_freelist_sort(FreeList fl);
-void        __int_freelist_split(FreeList fl, FreeList *left, FreeList *right);
-FreeList    __int_freelist_merge(FreeList left, FreeList right);
-void        __int_allocator_reduce_freelist(Allocator *this);
+void __int__allocator_append_freenode(Allocator *this, struct FreeNode *freenode) {
+    assert(freenode != NULL);
 
+    this->fl.count += 1;
+    this->user_allocated_size -= freenode->size;
+    freenode->block->user_allocated_size -= freenode->size;
+    
+    if(this->fl.head == NULL) {
+        this->fl.head = freenode;
+        this->fl.tail = freenode;
+        return;
+    } 
+
+    freenode->prev = this->fl.tail;
+    this->fl.tail->next = freenode;
+    this->fl.tail = freenode;
+}
+
+void *allocator_realloc(Allocator *this, void *base, size_t size) {
+    if(base == NULL) return allocator_alloc(this, size);
+
+    struct AllocationHeader *header = ((struct AllocationHeader *)base - 1);
+    if(header->is_free) {
+        fprintf(stderr, "cannot reallocated free pointer\n");
+        abort();
+    }
+
+    if(!header->is_allocated) {
+        fprintf(stderr, "failed to reallocate, pointer not produced by allocator\n");
+        abort();
+    }
+
+    if(header->base != base) {
+        fprintf(stderr, "failed to reallocate, invalid base pointer\n");
+        abort();
+    }
+
+    if(size == 0) {
+        allocator_free(this, base);
+        return NULL;
+    }
+
+    if(header->size == size) return header->base;
+
+    if(size < header->size) {
+        struct FreeNode *freenode = __int__freenode_new(header->base + header->size, header->size - size, header->block);
+        __int__allocator_append_freenode(this, freenode);
+        header->size -= freenode->size;
+        __int_allocator_reduce_freelist(this);
+        return header->base;
+    }
+
+    void *ptr = allocator_alloc(this, size);
+    memcpy(ptr, header->base, header->size);
+    allocator_free(this, header->base);
+
+    return ptr;
+}
 
 void allocator_free(Allocator *this, void *base) {
     if(base == NULL) return;
@@ -233,19 +297,7 @@ void allocator_free(Allocator *this, void *base) {
 
     struct FreeNode *freenode = __int__freenode_new((void *)header, ALLOCATION_SIZE(header->size), header->block);
     
-    if(this->fl.head == NULL) {
-        this->fl.head = freenode;
-        this->fl.tail = freenode;
-    } else {
-        freenode->prev = this->fl.tail;
-        this->fl.tail->next = freenode;
-        this->fl.tail = freenode;
-    }
-
-    this->fl.count += 1;
-
-    header->block->user_allocated_size -= ALLOCATION_SIZE(header->size);
-    this->user_allocated_size -= ALLOCATION_SIZE(header->size);
+    __int__allocator_append_freenode(this, freenode);
 
     header->is_free = true;
     header->is_allocated = false;
