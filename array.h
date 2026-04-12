@@ -41,7 +41,7 @@
             size_t new_size = (array).size * 2; \
             if(new_size == 0) new_size = ARRAY_INITIAL_SIZE; \
             \
-            (array).items = alloc_realloc_func(allocator, (array).items, sizeof(*(array).items) * new_size); \
+            (array).items = alloc_realloc_func((allocator), (array).items, sizeof(*(array).items) * new_size); \
             if((array).items == NULL) perror("allocator error"); \
             (array).size = new_size; \
         } \
@@ -58,7 +58,7 @@
  * arrfree_allocator: free array using allocator
  * expect alloc_free_func: function(Allocator *allocator, void *ptr) void;
  */
-#define arrfree_allocator(array, alloc_free_func, allocator) { alloc_free_func(allocator, (array).items); (array).len = 0; (array).size = 0; }
+#define arrfree_allocator(array, alloc_free_func, allocator) { alloc_free_func((allocator), (array).items); (array).len = 0; (array).size = 0; }
 
 
 #endif
