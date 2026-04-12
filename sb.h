@@ -24,6 +24,7 @@ typedef struct {
 
 StringBuilder *sb_new();
 StringBuilder *sb_new_from_allocator(Allocator *allocator);
+void           sb_reset(StringBuilder *sb);
 void           sb_append(StringBuilder *sb, char *data, size_t len);
 void           sb_append_cstr(StringBuilder *sb, const char *cstr);
 char          *sb_collect(StringBuilder *sb);
@@ -112,6 +113,10 @@ char *sb_collect(StringBuilder *sb) {
     __int__sb_clamp(sb, sb->len + 1);
     sb->data[sb->len] = 0;    
     return sb->data;
+}
+
+void sb_reset(StringBuilder *sb) {
+    sb->len = 0;
 }
 
 void sb_free(StringBuilder *sb) {
