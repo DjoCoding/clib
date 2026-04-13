@@ -14,6 +14,7 @@ Allocator  *allocator_new();
 void       *allocator_alloc(Allocator *a, size_t size);
 void       *allocator_realloc(Allocator *a, void *base, size_t size);
 void        allocator_free(Allocator *a, void *base);
+void        allocator_reset(Allocator *a);
 void        allocator_kill(Allocator *a);
 
 #ifdef ALLOCATOR_IMPLEMENTATION__
@@ -464,8 +465,29 @@ void __int_allocator_reduce_freelist(Allocator *this) {
     }
 }
 
+void allocator_reset(Allocator *this) {
+    struct FreeNode *current = this->fl.head;
+    while(current != NULL) {
+        struct FreeNode *next = current->next;
+        free(current);
+        current = next;
+    }
+
+    this->fl.head = NULL;
+    this->fl.tail = NULL;
+    this->fl.count = 0;
+
+    
+    for(size_t i = 0; i < this->blocks.len; ++i) {
+        memset(this->blocks.items[i]->base, 0, this->blocks.items[i]->capacity);
+        this->blocks.items[i]->user_allocated_size = 0;
+        this->blocks.items[i]->offset = 0;
+    }
+
+    this->user_allocated_size = 0;
+}
+
 
 #endif // ALLOCATOR_IMPLEMENTATION
-
 
 #endif // ALLOCATOR_H_
