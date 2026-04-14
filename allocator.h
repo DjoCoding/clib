@@ -12,6 +12,7 @@ typedef struct Allocator Allocator;
 
 Allocator  *allocator_new();
 void       *allocator_alloc(Allocator *a, size_t size);
+void       *allocator_zalloc(Allocator *a, size_t size);
 void       *allocator_realloc(Allocator *a, void *base, size_t size);
 void        allocator_free(Allocator *a, void *base);
 void        allocator_reset(Allocator *a);
@@ -214,6 +215,12 @@ void *allocator_alloc(Allocator *this, size_t size) {
     else this->fl.tail = current->next;
 
     free(current);
+    return base;
+}
+
+void *allocator_zalloc(Allocator *this, size_t size) {
+    void *base = allocator_alloc(this, size);
+    memset(base, 0, size);
     return base;
 }
 
