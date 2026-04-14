@@ -269,7 +269,7 @@ void *allocator_realloc(Allocator *this, void *base, size_t size) {
     if(header->size == size) return header->base;
 
     if(size < header->size) {
-        struct FreeNode *freenode = __int__freenode_new(header->base + header->size, header->size - size, header->block);
+        struct FreeNode *freenode = __int__freenode_new(header->base + ALLOCATION_SIZE(size), header->size - size, header->block);
         __int__allocator_append_freenode(this, freenode);
         header->size -= freenode->size;
         __int_allocator_reduce_freelist(this);
