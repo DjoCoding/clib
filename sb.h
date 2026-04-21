@@ -118,7 +118,7 @@ void __int__sb_clamp(StringBuilder *sb, size_t size) {
 
 
 void sb_append_str(StringBuilder *sb, char *data, size_t len) {
-    if(sb->len + len > sb->size) __int__sb_resize(sb, sb->len + len);
+    if(sb->len + len >= sb->size) __int__sb_resize(sb, sb->len + len);
     memcpy(sb->data + sb->len, data, len);
     sb->len += len;
 }
