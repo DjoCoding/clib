@@ -12,8 +12,10 @@ typedef struct Allocator Allocator;
 
 Allocator  *allocator_new();
 void       *allocator_alloc(Allocator *a, size_t size);
+void       *allocator_zalloc(Allocator *a, size_t size);
 void       *allocator_realloc(Allocator *a, void *base, size_t size);
 void        allocator_free(Allocator *a, void *base);
+void        allocator_reset(Allocator *a);
 void        allocator_kill(Allocator *a);
 
 #ifdef ALLOCATOR_IMPLEMENTATION__
@@ -216,6 +218,12 @@ void *allocator_alloc(Allocator *this, size_t size) {
     return base;
 }
 
+void *allocator_zalloc(Allocator *this, size_t size) {
+    void *base = allocator_alloc(this, size);
+    memset(base, 0, size);
+    return base;
+}
+
 void __int__allocator_append_freenode(Allocator *this, struct FreeNode *freenode) {
     assert(freenode != NULL);
 
@@ -261,7 +269,7 @@ void *allocator_realloc(Allocator *this, void *base, size_t size) {
     if(header->size == size) return header->base;
 
     if(size < header->size) {
-        struct FreeNode *freenode = __int__freenode_new(header->base + header->size, header->size - size, header->block);
+        struct FreeNode *freenode = __int__freenode_new(header->base + ALLOCATION_SIZE(size), header->size - size, header->block);
         __int__allocator_append_freenode(this, freenode);
         header->size -= freenode->size;
         __int_allocator_reduce_freelist(this);
@@ -464,8 +472,29 @@ void __int_allocator_reduce_freelist(Allocator *this) {
     }
 }
 
+void allocator_reset(Allocator *this) {
+    struct FreeNode *current = this->fl.head;
+    while(current != NULL) {
+        struct FreeNode *next = current->next;
+        free(current);
+        current = next;
+    }
+
+    this->fl.head = NULL;
+    this->fl.tail = NULL;
+    this->fl.count = 0;
+
+    
+    for(size_t i = 0; i < this->blocks.len; ++i) {
+        memset(this->blocks.items[i]->base, 0, this->blocks.items[i]->capacity);
+        this->blocks.items[i]->user_allocated_size = 0;
+        this->blocks.items[i]->offset = 0;
+    }
+
+    this->user_allocated_size = 0;
+}
+
 
 #endif // ALLOCATOR_IMPLEMENTATION
-
 
 #endif // ALLOCATOR_H_

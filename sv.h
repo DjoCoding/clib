@@ -27,10 +27,11 @@ bool       sv_equal(StringView a, StringView b);
 StringView sv_split(StringView *sv, char c);
 bool       sv_contains(StringView sv, StringView candidate);
 StringView sv_substring(StringView sv, size_t from, size_t to);
+bool       sv_starts_with(StringView a, StringView b);
+bool       sv_ends_with(StringView a, StringView b);
 
 // Transformers
 char      *sv_to_str(StringView sv, char *buffer, size_t len);
-
 
 #ifdef STRING_VIEW_IMPLEMENTATION
 
@@ -98,6 +99,16 @@ bool sv_contains(StringView sv, StringView candidate) {
         if(sv_equal(sub_sv, candidate)) return true;
     }
     return false;
+}
+
+bool sv_starts_with(StringView a, StringView b) {
+    if(b.len > a.len) return false;
+    return sv_equal(sv_substring(a, 0, b.len), b);
+}
+
+bool sv_ends_with(StringView a, StringView b) {
+    if(b.len > a.len) return false;
+    return sv_equal(sv_substring(a, a.len - b.len, a.len), b);
 }
 
 StringView sv_substring(StringView sv, size_t from, size_t to) {
