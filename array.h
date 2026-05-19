@@ -50,6 +50,12 @@
         (array).len += 1; \
     } while(0)
 
+#define arrforeach(array, index, item, ...) \
+    for(size_t index = 0; index < (array).len; ++index) { \
+        typeof(*(array).items) item = (array).items[index]; \
+        __VA_ARGS__ \
+    }
+
 #define arrclean(array) { (array).len = 0; }
 
 #define arrfree(array) { free((array).items); (array).len = 0; (array).size = 0; }
